@@ -3,10 +3,12 @@ import {StyleSheet, View, ViewProps, ViewStyle, Platform} from 'react-native';
 import {BlurView} from 'expo-blur';
 import {LiquidTokens} from '../tokens';
 
+export type GlassVariant = 'regular' | 'thin' | 'thick' | 'chrome';
+
 export interface GlassViewProps extends ViewProps {
   intensity?: number;
-  tint?: 'dark' | 'light' | 'extraDark';
-  variant?: 'regular' | 'thin' | 'thick' | 'chrome';
+  tint?: 'dark' | 'light' | 'default';
+  variant?: GlassVariant;
   borderRadius?: number;
   borderWidth?: number;
   borderColor?: string;

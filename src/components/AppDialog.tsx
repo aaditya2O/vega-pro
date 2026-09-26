@@ -66,7 +66,11 @@ const AppDialog = ({
     <MaterialDialogSurface visible={visible} onDismiss={onDismiss}>
       <View style={styles.headerRow}>
         <MaterialCommunityIcons name={appearance.icon} size={28} color={iconColor} />
-        <Text style={[styles.title, {color: colors.onSurface}]}>{title}</Text>
+        <Text
+          testID="app-dialog-title"
+          style={[styles.title, {color: colors.onSurface}]}>
+          {title}
+        </Text>
       </View>
 
       <View style={styles.bodyWrap}>
@@ -111,7 +115,11 @@ const AppDialog = ({
             </Markdown>
           </ScrollView>
         ) : (
-          <Text style={[styles.message, {color: colors.onSurfaceVariant}]}>{message}</Text>
+          <Text
+            testID="app-dialog-message"
+            style={[styles.message, {color: colors.onSurfaceVariant}]}>
+            {message}
+          </Text>
         )}
       </View>
 
@@ -119,6 +127,7 @@ const AppDialog = ({
         {actions.map((action, idx) => (
           <Button
             key={idx}
+            testID={action.testID}
             compact
             variant={
               action.variant === 'destructive'

@@ -54,8 +54,16 @@ describe('fetchIMDbSuggestions', () => {
     );
 
     expect(suggestions).toEqual([
-      'Neon Genesis Evangelion',
-      'Neon Genesis Evangelion: The End of Evangelion',
+      {
+        title: 'Neon Genesis Evangelion',
+        type: 'tv',
+        year: 1995,
+      },
+      {
+        title: 'Neon Genesis Evangelion: The End of Evangelion',
+        type: 'movie',
+        year: 1997,
+      },
     ]);
   });
 
@@ -78,7 +86,13 @@ describe('fetchIMDbSuggestions', () => {
       'https://v3.sg.media-imdb.com/suggestion/titles/x/.hack.json',
       expect.objectContaining({timeout: 5000}),
     );
-    expect(suggestions).toEqual(['The Hack']);
+    expect(suggestions).toEqual([
+      {
+        title: 'The Hack',
+        type: 'movie',
+        year: undefined,
+      },
+    ]);
   });
 
   it('handles API errors gracefully and returns empty array', async () => {

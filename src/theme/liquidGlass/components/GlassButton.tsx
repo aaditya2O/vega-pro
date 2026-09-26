@@ -25,6 +25,7 @@ export interface GlassButtonProps {
   title?: string;
   variant?: GlassButtonVariant;
   compact?: boolean;
+  size?: 'sm' | 'md' | 'lg';
   disabled?: boolean | null;
   onPress?: () => void;
   style?: ViewStyle;

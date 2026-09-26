@@ -34,9 +34,9 @@ export const DynamicIslandLiveActivity: React.FC<DynamicIslandLiveActivityProps>
   const [isExpanded, setIsExpanded] = useState(false);
 
   // Reanimated values for morphing between compact pill and expanded card
-  const width = useSharedValue(124);
-  const height = useSharedValue(35);
-  const borderRadius = useSharedValue(LiquidTokens.radii.island);
+  const width = useSharedValue<number>(124);
+  const height = useSharedValue<number>(35);
+  const borderRadius = useSharedValue<number>(LiquidTokens.radii.island);
 
   // Equalizer bar heights
   const eq1 = useSharedValue(0.4);

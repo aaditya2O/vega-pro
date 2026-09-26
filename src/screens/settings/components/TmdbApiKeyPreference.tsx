@@ -1,5 +1,6 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import {useFocusEffect} from '@react-navigation/native';
+import React, {useCallback, useState} from 'react';
 import {Pressable, TextInput, View} from 'react-native';
 import Toast from '../../../lib/utils/toast';
 import AppText from '../../../components/ui/Text';
@@ -103,7 +104,7 @@ const TmdbApiKeyPreference = () => {
             accessibilityRole="button"
             accessibilityLabel={showKey ? 'Hide API key' : 'Show API key'}
             hitSlop={6}
-            onPress={() => setShowKey(value => !value)}
+            onPress={() => setShowKey((value: boolean) => !value)}
             style={{
               alignItems: 'center',
               height: 48,

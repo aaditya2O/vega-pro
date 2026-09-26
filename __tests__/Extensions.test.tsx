@@ -12,6 +12,7 @@ const existingProvider = {
   disabled: false,
   type: 'global' as const,
   installed: true,
+  hasSettings: false,
 };
 
 const newProvider = {
@@ -23,6 +24,7 @@ const newProvider = {
   disabled: false,
   type: 'english' as const,
   installed: false,
+  hasSettings: false,
 };
 
 const alternateSourceProvider = {
@@ -219,7 +221,7 @@ describe('Extensions provider installation', () => {
     ).toBe('Error');
     expect(
       tree!.root.findByProps({testID: 'app-dialog-message'}).props.children,
-    ).toBe('Failed to install provider. Please try again.');
+    ).toBe('fixture download failed');
   });
 
   it('activates the first provider installed during initial setup', async () => {

@@ -11,7 +11,7 @@ export const fetchIMDbSuggestions = async (
   signal?: AbortSignal,
 ): Promise<IMDbSuggestion[]> => {
   const clean = query.trim().toLowerCase();
-  if (clean.length < 2) {
+  if (clean.length < 3) {
     return [];
   }
 
