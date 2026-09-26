@@ -106,6 +106,7 @@ module.exports = () => {
     ],
     'expo-font',
     'expo-status-bar',
+    './plugins/with-ios-modular-headers.js',
   ];
   return {
     expo: {
@@ -114,7 +115,18 @@ module.exports = () => {
       displayName: 'Vega Pro',
       jsEngine: 'hermes',
       newArchEnabled: true,
-      autolinking: { exclude: ['expo-splash-screen'] },
+      autolinking: {
+        exclude: [
+          'expo-splash-screen',
+          ...(!hasIosGooglePlist
+            ? [
+                '@react-native-firebase/app',
+                '@react-native-firebase/analytics',
+                '@react-native-firebase/crashlytics',
+              ]
+            : []),
+        ],
+      },
       plugins,
       slug: 'vega-pro',
       version: '4.0.6',
