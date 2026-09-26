@@ -1,0 +1,149 @@
+name: Build Vega Pro iOS (ARM64 Physical Device)
+
+on:
+  push:
+    branches:
+      - main
+      - 'feature/**'
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build-ios:
+    name: Build Vega Pro (Physical Device Unsigned IPA)
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build Sandbox Runtime
+        run: npm run build:sandbox
+
+      - name: Generate iOS native project with Expo Prebuild
+        run: npx expo prebuild --platform ios --clean --no-install
+
+      - name: Install CocoaPods
+        run: |
+          cd ios
+          pod install || pod install --repo-update
+          cd ..
+
+      - name: Build Vega Pro with Xcode (ARM64 Physical Device, Unsigned)
+        run: |
+          WORKSPACE=$(find ios -name "*.xcworkspace" -maxdepth 1 | head -n 1)
+          echo "Using workspace: $WORKSPACE"
+
+          # Detect scheme
+          SCHEME="VegaPro"
+          if ! xcodebuild -list -workspace "$WORKSPACE" | grep -q "VegaPro"; then
+            if xcodebuild -list -workspace "$WORKSPACE" | grep -q "Vega Pro"; then
+              SCHEME="Vega Pro"
+            fi
+          fi
+          echo "Using scheme: $SCHEME"
+
+          xcodebuild \
+            -workspace "$WORKSPACE" \
+            -scheme "$SCHEME" \
+            -configuration Release \
+            -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            DEVELOPMENT_TEAM="" \
+            COMPILER_INDEX_STORE_ENABLE=NO \
+            clean build
+
+      - name: Locate and Produce VegaPro.app
+        run: |
+          APP_PATH=$(find build/Build/Products/Release-iphoneos -name "*.app" -type d | head -n 1)
+          if [ -z "$APP_PATH" ] || [ ! -d "$APP_PATH" ]; then
+            echo "::error::Built .app not found in build/Build/Products/Release-iphoneos!"
+            exit 1
+          fi
+          echo "Found compiled app at: $APP_PATH"
+          mkdir -p build/output
+          cp -R "$APP_PATH" build/output/VegaPro.app
+          echo "VegaPro.app successfully produced at build/output/VegaPro.app"
+
+      - name: Verify ARM64 Architecture and Guard Against Simulator
+        run: |
+          APP_DIR="build/output/VegaPro.app"
+
+          # Resolve executable
+          EXECUTABLE=""
+          if [ -f "$APP_DIR/Info.plist" ]; then
+            EXEC_NAME=$(/usr/libexec/PlistBuddy -c "Print :CFBundleExecutable" "$APP_DIR/Info.plist" 2>/dev/null || echo "")
+            if [ -n "$EXEC_NAME" ] && [ -f "$APP_DIR/$EXEC_NAME" ]; then
+              EXECUTABLE="$APP_DIR/$EXEC_NAME"
+            fi
+          fi
+
+          if [ -z "$EXECUTABLE" ]; then
+            EXECUTABLE=$(find "$APP_DIR" -maxdepth 1 -type f -perm +111 ! -name "*.plist" ! -name "*.nib" | head -n 1)
+          fi
+
+          echo "Inspecting binary: $EXECUTABLE"
+
+          # Run lipo -info
+          LIPO_OUTPUT=$(lipo -info "$EXECUTABLE")
+          echo "lipo -info output:"
+          echo "$LIPO_OUTPUT"
+
+          # Check for ARM64
+          if echo "$LIPO_OUTPUT" | grep -q "arm64"; then
+            echo "SUCCESS: Verified binary contains ARM64 architecture."
+          else
+            echo "::error::Binary does not contain ARM64 architecture!"
+            exit 1
+          fi
+
+          # Fail if the build targets Simulator
+          if otool -l "$EXECUTABLE" | grep -q "PLATFORM_IOSSIMULATOR"; then
+            echo "::error::Binary targets iOS Simulator (PLATFORM_IOSSIMULATOR detected)!"
+            exit 1
+          fi
+
+          if echo "$LIPO_OUTPUT" | grep -E -q "x86_64|i386"; then
+            echo "::error::Binary targets Simulator architectures (x86_64/i386)!"
+            exit 1
+          fi
+
+          # Output Mach-O load commands for build version
+          PLATFORM_INFO=$(otool -l "$EXECUTABLE" | grep -A 4 "LC_BUILD_VERSION" || true)
+          echo "Mach-O Platform info:"
+          echo "$PLATFORM_INFO"
+
+          echo "SUCCESS: Build verified for physical iOS device (ARM64), not Simulator."
+
+      - name: Package Payload/VegaPro.app into VegaPro.ipa
+        run: |
+          mkdir -p Payload
+          cp -R build/output/VegaPro.app Payload/VegaPro.app
+          zip -r -y VegaPro.ipa Payload
+          echo "VegaPro.ipa successfully packaged."
+
+      - name: Print SHA-256 Hash
+        run: |
+          echo "==================== SHA-256 HASH ===================="
+          shasum -a 256 VegaPro.ipa
+          echo "======================================================"
+
+      - name: Upload VegaPro.ipa Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: VegaPro.ipa
+          path: VegaPro.ipa
+          if-no-files-found: error
