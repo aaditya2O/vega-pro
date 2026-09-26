@@ -184,6 +184,7 @@ module.exports = () => {
             '_airplay._tcp',
             '_raop._tcp',
           ],
+          ITSAppUsesNonExemptEncryption: false,
           NSLocalNetworkUsageDescription:
             'Vega Pro uses local network to discover AirPlay and Google Cast displays.',
         },
