@@ -1,4 +1,5 @@
-import { NativeModules, Platform, ToastAndroid } from 'react-native';
+import { NativeModules, Platform } from 'react-native';
+import Toast from '../utils/toast';
 import { settingsStorage } from '../storage';
 
 const { ByeDpiModule, WarpModule } = NativeModules;
@@ -99,7 +100,7 @@ export const syncByeDpiSettings = async (): Promise<void> => {
       await startByeDpi();
     } catch (e) {
       console.warn('[ByeDPI] Startup initialization warning:', e);
-      ToastAndroid.show('Failed to start ByeDPI.', ToastAndroid.SHORT);
+      Toast.show('Failed to start ByeDPI.', Toast.SHORT);
     }
   } else {
     await stopByeDpi();

@@ -4,10 +4,10 @@ import {
   Modal,
   TextInput,
   ActivityIndicator,
-  ToastAndroid,
   ScrollView,
   useWindowDimensions,
 } from 'react-native';
+import Toast from '../lib/utils/toast';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import React, {useState} from 'react';
@@ -107,7 +107,7 @@ const SearchSubtitles = ({
       console.log('openSubtitles err', e);
       setLoading(false);
       setError(e?.message);
-      ToastAndroid.show('Error fetching subtitles', ToastAndroid.SHORT);
+      Toast.show('Error fetching subtitles', Toast.SHORT);
     }
   };
   return (

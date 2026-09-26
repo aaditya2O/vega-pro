@@ -1,12 +1,7 @@
-import {
-  ContainedLoadingIndicator,
-  Host,
-  LoadingIndicator as NativeLoadingIndicator,
-} from '@expo/ui/jetpack-compose';
-import { size } from '@expo/ui/jetpack-compose/modifiers';
 import React from 'react';
-import { View, ViewStyle } from 'react-native';
-import { useM3Colors, useM3HostTheme } from '../../theme/M3PaletteContext';
+import {ActivityIndicator, StyleSheet, View, ViewStyle} from 'react-native';
+import {useM3Colors} from '../../theme/M3PaletteContext';
+import {LiquidTokens} from '../../theme/liquidGlass/tokens';
 
 interface LoadingIndicatorProps {
   contained?: boolean;
@@ -17,42 +12,41 @@ interface LoadingIndicatorProps {
 
 const LoadingIndicator = ({
   contained = false,
-  size: indicatorSize = 45,
+  size: indicatorSize = 40,
   color,
   style,
 }: LoadingIndicatorProps) => {
   const colors = useM3Colors();
-  const hostTheme = useM3HostTheme();
-  const indicatorColor = color || colors.primary;
-  const Indicator = contained
-    ? ContainedLoadingIndicator
-    : NativeLoadingIndicator;
+  const indicatorColor = color || LiquidTokens.colors.accentViolet || colors.primary;
 
   return (
     <View
-      collapsable={false}
       style={[
+        styles.container,
+        contained && styles.contained,
         {
-          alignItems: 'center',
-          alignSelf: 'center',
-          height: indicatorSize,
-          justifyContent: 'center',
-          width: indicatorSize,
+          width: contained ? indicatorSize + 20 : indicatorSize,
+          height: contained ? indicatorSize + 20 : indicatorSize,
         },
         style,
       ]}>
-      <Host
-        matchContents
-        {...hostTheme}
-        style={{ height: indicatorSize, width: indicatorSize }}>
-        <Indicator
-          color={indicatorColor}
-          containerColor={contained ? colors.primaryContainer : undefined}
-          modifiers={[size(indicatorSize, indicatorSize)]}
-        />
-      </Host>
+      <ActivityIndicator size="small" color={indicatorColor} />
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    alignSelf: 'center',
+  },
+  contained: {
+    borderRadius: 999,
+    backgroundColor: LiquidTokens.colors.glassFillRegular,
+    borderWidth: 1,
+    borderColor: LiquidTokens.colors.glassBorderLight,
+  },
+});
 
 export default LoadingIndicator;

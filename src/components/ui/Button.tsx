@@ -1,15 +1,23 @@
-import {
-  Button as NativeButton,
-  FilledTonalButton,
-  Host,
-  OutlinedButton,
-  Text,
-  TextButton,
-} from '@expo/ui/jetpack-compose';
-import {defaultMinSize} from '@expo/ui/jetpack-compose/modifiers';
 import React, {ReactNode} from 'react';
-import {ColorValue, Pressable, StyleSheet, View, ViewStyle} from 'react-native';
-import {useM3Colors, useM3HostTheme} from '../../theme/M3PaletteContext';
+import {
+  ColorValue,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+  ViewStyle,
+  Platform,
+} from 'react-native';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+} from 'react-native-reanimated';
+import LinearGradient from 'react-native-linear-gradient';
+import {useM3Colors} from '../../theme/M3PaletteContext';
+import {LiquidTokens} from '../../theme/liquidGlass/tokens';
+
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 type ButtonVariant =
   | 'filled'
@@ -35,7 +43,7 @@ const Button = ({
   children,
   variant = 'filled',
   compact = false,
-  disabled,
+  disabled = false,
   onPress,
   style,
   testID,
@@ -43,82 +51,125 @@ const Button = ({
   contentColor,
 }: ButtonProps) => {
   const colors = useM3Colors();
-  const hostTheme = useM3HostTheme();
-  const ButtonComponent =
-    variant === 'tonal'
-      ? FilledTonalButton
-      : variant === 'outlined'
-        ? OutlinedButton
-        : variant === 'text'
-          ? TextButton
-          : NativeButton;
-  const variantColors =
-    variant === 'destructive'
-      ? {containerColor: colors.error, contentColor: colors.onError}
-      : variant === 'white'
-        ? {containerColor: '#FFFFFF', contentColor: '#211F1E'}
-        : variant === 'filled'
-          ? {containerColor: colors.primary, contentColor: colors.onPrimary}
-          : variant === 'tonal'
-            ? {
-                containerColor: colors.secondaryContainer,
-                contentColor: colors.onSecondaryContainer,
-              }
-            : {contentColor: colors.primary};
-  const buttonColors = {
-    ...variantColors,
-    ...(containerColor ? {containerColor} : {}),
-    ...(contentColor ? {contentColor} : {}),
+  const scale = useSharedValue(1);
+
+  const handlePressIn = () => {
+    if (disabled) return;
+    scale.value = withSpring(0.96, LiquidTokens.spring.bounce);
   };
 
+  const handlePressOut = () => {
+    scale.value = withSpring(1, LiquidTokens.spring.bounce);
+  };
+
+  const animStyle = useAnimatedStyle(() => ({
+    transform: [{scale: scale.value}],
+  }));
+
+  const height = compact ? 38 : 48;
+  const paddingHorizontal = compact ? 16 : 24;
+
+  const isGradient = variant === 'filled' && !containerColor;
+
   return (
-    <View
+    <AnimatedPressable
+      testID={testID}
+      accessibilityRole="button"
+      accessibilityState={{disabled: Boolean(disabled)}}
+      disabled={Boolean(disabled)}
+      onPress={onPress}
+      onPressIn={handlePressIn}
+      onPressOut={handlePressOut}
       style={[
+        styles.base,
         {
-          alignSelf: 'flex-start',
-          borderRadius: 999,
-          overflow: 'hidden',
-          position: 'relative',
+          height,
+          paddingHorizontal,
+          backgroundColor: isGradient
+            ? 'transparent'
+            : (containerColor as string) ||
+              (variant === 'tonal'
+                ? colors.secondaryContainer
+                : variant === 'outlined'
+                  ? 'transparent'
+                  : variant === 'white'
+                    ? '#ffffff'
+                    : variant === 'destructive'
+                      ? colors.error
+                      : colors.primary),
+          borderWidth: variant === 'outlined' ? 1 : 0,
+          borderColor: colors.outline,
+          opacity: disabled ? 0.45 : 1,
         },
+        animStyle,
         style,
       ]}>
-      <Host
-        matchContents
-        {...hostTheme}
-        pointerEvents="none">
-        <ButtonComponent
-          enabled={!disabled}
-          colors={buttonColors}
-          contentPadding={
-            compact
-              ? {start: 16, top: 8, end: 16, bottom: 8}
-              : {start: 24, top: 12, end: 24, bottom: 12}
-          }
-          modifiers={[
-            defaultMinSize({
-              minWidth: compact ? 64 : 80,
-              minHeight: compact ? 40 : 48,
-            }),
-          ]}>
+      {isGradient && (
+        <LinearGradient
+          colors={LiquidTokens.gradients.liquidPrimary as unknown as string[]}
+          start={{x: 0, y: 0}}
+          end={{x: 1, y: 1}}
+          style={StyleSheet.absoluteFill}
+        />
+      )}
+      <View style={styles.contentWrap}>
+        {typeof children === 'string' ? (
           <Text
-            color={String(buttonColors.contentColor)}
-            style={{typography: 'labelLarge', fontWeight: '700'}}>
+            style={[
+              styles.text,
+              {
+                color:
+                  (contentColor as string) ||
+                  (variant === 'white'
+                    ? '#000000'
+                    : variant === 'outlined' || variant === 'text'
+                      ? colors.primary
+                      : variant === 'destructive'
+                        ? colors.onError
+                        : colors.onPrimary),
+                fontSize: compact ? 13 : 15,
+              },
+            ]}>
             {children}
           </Text>
-        </ButtonComponent>
-      </Host>
-      <Pressable
-        accessibilityRole="button"
-        accessibilityState={{disabled: Boolean(disabled)}}
-        android_ripple={{color: String(colors.onSurfaceVariant)}}
-        disabled={Boolean(disabled)}
-        hitSlop={6}
-        onPress={onPress}
-        testID={testID}
-        style={StyleSheet.absoluteFill}
-      />
-    </View>
+        ) : (
+          children
+        )}
+      </View>
+    </AnimatedPressable>
   );
 };
+
+const styles = StyleSheet.create({
+  base: {
+    borderRadius: LiquidTokens.radii.pill,
+    alignItems: 'center',
+    justifyContent: 'center',
+    alignSelf: 'flex-start',
+    overflow: 'hidden',
+    position: 'relative',
+    ...Platform.select({
+      ios: {
+        shadowColor: LiquidTokens.colors.accentViolet,
+        shadowOffset: {width: 0, height: 6},
+        shadowOpacity: 0.35,
+        shadowRadius: 12,
+      },
+      android: {
+        elevation: 4,
+      },
+    }),
+  },
+  contentWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  text: {
+    fontWeight: '700',
+    letterSpacing: -0.2,
+  },
+});
 
 export default Button;

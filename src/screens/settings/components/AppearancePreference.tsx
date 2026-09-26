@@ -1,6 +1,6 @@
 import React, {useState} from 'react';
 import {Platform, Pressable, View} from 'react-native';
-import {isDynamicColorAvailable} from '@expo/ui/jetpack-compose';
+const isDynamicColorAvailable = false;
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import useThemeStore from '../../../lib/zustand/themeStore';
 import {M3_SEEDS} from '../../../theme/seeds';

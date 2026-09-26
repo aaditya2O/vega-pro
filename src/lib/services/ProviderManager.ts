@@ -1,4 +1,4 @@
-import {ToastAndroid} from 'react-native';
+import Toast from '../utils/toast';
 import axios from 'axios';
 import {headers as commonHeaders} from '../providers/headers';
 import {Catalog, EpisodeLink, Info, Post, Stream, SettingsField} from '../providers/types';
@@ -338,7 +338,7 @@ export class ProviderManager {
         error,
         `Failed to get episodes from provider: ${providerValue}`,
       );
-      ToastAndroid.show(errorMessage, ToastAndroid.LONG);
+      Toast.show(errorMessage, Toast.LONG);
       throw new Error(errorMessage);
     }
   };

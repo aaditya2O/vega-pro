@@ -1,19 +1,18 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import {
-  DropdownMenuItem,
-  ExposedDropdownMenu,
-  ExposedDropdownMenuBox,
-  Host,
-  RNHostView,
-  Shape,
-  Text,
-  TextField,
-} from '@expo/ui/jetpack-compose';
-import {fillMaxWidth, menuAnchor} from '@expo/ui/jetpack-compose/modifiers';
 import React, {useState} from 'react';
-import {View, ViewStyle} from 'react-native';
-import {useM3Colors, useM3HostTheme} from '../../theme/M3PaletteContext';
-import {LEGACY_TERTIARY_BACKGROUND} from '../../theme/seeds';
+import {
+  FlatList,
+  Modal,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+  ViewStyle,
+  Platform,
+} from 'react-native';
+import {BlurView} from 'expo-blur';
+import {useM3Colors} from '../../theme/M3PaletteContext';
+import {LiquidTokens} from '../../theme/liquidGlass/tokens';
 
 interface DropdownFieldProps<T> {
   options: readonly T[];
@@ -39,107 +38,170 @@ const DropdownField = <T,>({
   disabled = false,
 }: DropdownFieldProps<T>) => {
   const colors = useM3Colors();
-  const hostTheme = useM3HostTheme();
-  const [expanded, setExpanded] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false);
+
   const selectedKey = value ? getKey(value) : undefined;
   const selectedOption = options.find(option => getKey(option) === selectedKey);
   const selectedLabel = selectedOption ? getLabel(selectedOption) : placeholder;
 
   return (
-    <View style={[{width: '100%', minHeight: 56}, style]}>
-      <Host
-        matchContents={{vertical: true}}
-        style={{width: '100%', minHeight: 56, opacity: disabled ? 0.45 : 1}}
-        pointerEvents={disabled ? 'none' : 'auto'}
-        {...hostTheme}>
-      <ExposedDropdownMenuBox
-        expanded={disabled ? false : expanded}
-        onExpandedChange={next => !disabled && setExpanded(next)}>
-        <TextField
-          readOnly
-          singleLine
-          modifiers={[menuAnchor(), fillMaxWidth()]}
-          shape={Shape.RoundedCorner({
-            cornerRadii: {
-              topStart: 16,
-              topEnd: 16,
-              bottomStart: 16,
-              bottomEnd: 16,
-            },
-          })}
-          textStyle={{fontSize: 14, color: colors.onSurface}}
-          colors={{
-            focusedContainerColor: LEGACY_TERTIARY_BACKGROUND,
-            unfocusedContainerColor: LEGACY_TERTIARY_BACKGROUND,
-            focusedTextColor: colors.onSurface,
-            unfocusedTextColor: colors.onSurface,
-            focusedIndicatorColor: colors.primary,
-            unfocusedIndicatorColor: colors.outlineVariant,
-            focusedPlaceholderColor: colors.onSurface,
-            unfocusedPlaceholderColor: colors.onSurface,
-          }}>
-          <TextField.Placeholder>
-            <Text
-              color={colors.onSurface}
-              maxLines={1}
-              overflow="ellipsis"
-              softWrap={false}>
-              {selectedLabel}
-            </Text>
-          </TextField.Placeholder>
-          <TextField.TrailingIcon>
-            <RNHostView matchContents>
-              <View
-                style={{
-                  alignItems: 'center',
-                  height: 24,
-                  justifyContent: 'center',
-                  width: 24,
-                }}>
-                <MaterialCommunityIcons
-                  name={expanded ? 'menu-up' : 'menu-down'}
-                  size={22}
-                  color={colors.primary}
-                />
-              </View>
-            </RNHostView>
-          </TextField.TrailingIcon>
-        </TextField>
-        <ExposedDropdownMenu
-          expanded={expanded}
-          containerColor={LEGACY_TERTIARY_BACKGROUND}
-          onDismissRequest={() => setExpanded(false)}>
-          {options.map(option => {
-            const key = getKey(option);
-            const selected = key === selectedKey;
-            return (
-              <DropdownMenuItem
-                key={key}
-                elementColors={{
-                  textColor: selected ? colors.primary : colors.onSurface,
-                }}
-                onClick={() => {
-                  onChange(option);
-                  setExpanded(false);
-                }}>
-                <DropdownMenuItem.Text>
-                  <Text
-                    color={selected ? colors.primary : colors.onSurface}
-                    maxLines={showFullOptionLabels ? undefined : 2}
-                    overflow={showFullOptionLabels ? undefined : 'ellipsis'}
-                    softWrap={showFullOptionLabels}
-                    style={{fontWeight: selected ? '700' : '400'}}>
-                    {getLabel(option)}
-                  </Text>
-                </DropdownMenuItem.Text>
-              </DropdownMenuItem>
-            );
-          })}
-        </ExposedDropdownMenu>
-      </ExposedDropdownMenuBox>
-    </Host>
+    <View style={[{width: '100%'}, style]}>
+      {/* Trigger Button */}
+      <Pressable
+        disabled={disabled}
+        onPress={() => setModalVisible(true)}
+        style={[
+          styles.triggerBox,
+          {
+            backgroundColor: LiquidTokens.colors.glassFillThin,
+            borderColor: LiquidTokens.colors.glassBorderLight,
+            opacity: disabled ? 0.45 : 1,
+          },
+        ]}>
+        <Text
+          style={[
+            styles.triggerLabel,
+            {color: selectedOption ? '#ffffff' : LiquidTokens.colors.textTertiary},
+          ]}
+          numberOfLines={1}>
+          {selectedLabel}
+        </Text>
+        <MaterialCommunityIcons
+          name="chevron-down"
+          size={20}
+          color={LiquidTokens.colors.accentViolet}
+        />
+      </Pressable>
+
+      {/* iOS Liquid Glass Modal Picker Sheet */}
+      <Modal
+        visible={modalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setModalVisible(false)}>
+        <View style={styles.modalBackdrop}>
+          <Pressable
+            style={StyleSheet.absoluteFill}
+            onPress={() => setModalVisible(false)}>
+            <BlurView intensity={30} tint="dark" style={StyleSheet.absoluteFill} />
+          </Pressable>
+
+          <View style={styles.pickerSheet}>
+            <View style={styles.grabber} />
+            <Text style={styles.pickerTitle}>{placeholder}</Text>
+
+            <FlatList
+              data={options as T[]}
+              keyExtractor={item => getKey(item)}
+              style={styles.optionsList}
+              renderItem={({item}) => {
+                const isSelected = getKey(item) === selectedKey;
+                return (
+                  <Pressable
+                    style={[
+                      styles.optionItem,
+                      isSelected && styles.optionItemSelected,
+                    ]}
+                    onPress={() => {
+                      onChange(item);
+                      setModalVisible(false);
+                    }}>
+                    <Text
+                      style={[
+                        styles.optionText,
+                        isSelected && styles.optionTextSelected,
+                      ]}>
+                      {getLabel(item)}
+                    </Text>
+                    {isSelected && (
+                      <MaterialCommunityIcons
+                        name="check"
+                        size={20}
+                        color={LiquidTokens.colors.accentViolet}
+                      />
+                    )}
+                  </Pressable>
+                );
+              }}
+            />
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  triggerBox: {
+    height: 52,
+    borderRadius: LiquidTokens.radii.pill,
+    borderWidth: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 18,
+  },
+  triggerLabel: {
+    fontSize: 14.5,
+    fontWeight: '500',
+    flex: 1,
+  },
+  modalBackdrop: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    backgroundColor: 'rgba(0, 0, 0, 0.65)',
+  },
+  pickerSheet: {
+    maxHeight: '65%',
+    backgroundColor: 'rgba(20, 20, 32, 0.94)',
+    borderTopLeftRadius: 32,
+    borderTopRightRadius: 32,
+    borderWidth: 1,
+    borderBottomWidth: 0,
+    borderColor: LiquidTokens.colors.glassBorderLight,
+    paddingTop: 16,
+    paddingBottom: 36,
+    paddingHorizontal: 20,
+  },
+  grabber: {
+    width: 38,
+    height: 4.5,
+    borderRadius: 2.5,
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    alignSelf: 'center',
+    marginBottom: 14,
+  },
+  pickerTitle: {
+    fontSize: 17,
+    fontWeight: '700',
+    color: '#ffffff',
+    textAlign: 'center',
+    marginBottom: 16,
+  },
+  optionsList: {
+    maxHeight: 380,
+  },
+  optionItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderRadius: LiquidTokens.radii.md,
+    marginBottom: 6,
+  },
+  optionItemSelected: {
+    backgroundColor: 'rgba(139, 92, 246, 0.2)',
+  },
+  optionText: {
+    fontSize: 15,
+    color: LiquidTokens.colors.textSecondary,
+    fontWeight: '500',
+  },
+  optionTextSelected: {
+    color: '#ffffff',
+    fontWeight: '700',
+  },
+});
 
 export default DropdownField;

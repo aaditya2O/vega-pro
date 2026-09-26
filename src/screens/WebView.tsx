@@ -3,8 +3,8 @@ import {
   View,
   SafeAreaView,
   Linking,
-  ToastAndroid,
 } from 'react-native';
+import Toast from '../lib/utils/toast';
 import React, {useEffect, useRef, useState} from 'react';
 import {WebView} from 'react-native-webview';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
@@ -27,10 +27,10 @@ const Webview = ({route, navigation}: Props) => {
     if (settingsStorage.isSkipInAppWebview()) {
       if (link) {
         Linking.openURL(link).catch(() => {
-          ToastAndroid.show('Failed to open browser', ToastAndroid.SHORT);
+          Toast.show('Failed to open browser', Toast.SHORT);
         });
       } else {
-        ToastAndroid.show('Unsupported link', ToastAndroid.SHORT);
+        Toast.show('Unsupported link', Toast.SHORT);
       }
       navigation.goBack();
     }
@@ -52,11 +52,11 @@ const Webview = ({route, navigation}: Props) => {
 
   const openExternally = () => {
     if (!isSafeExternalUrl(currentUrl)) {
-      ToastAndroid.show('Unsupported link', ToastAndroid.SHORT);
+      Toast.show('Unsupported link', Toast.SHORT);
       return;
     }
     Linking.openURL(currentUrl).catch(() => {
-      ToastAndroid.show('Failed to open browser', ToastAndroid.SHORT);
+      Toast.show('Failed to open browser', Toast.SHORT);
     });
   };
 

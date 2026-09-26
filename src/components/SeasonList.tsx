@@ -8,13 +8,13 @@ import React, {
 import {
   View,
   TouchableOpacity,
-  ToastAndroid,
   FlatList,
   ActivityIndicator,
   Image,
   ScrollView,
   TextInput,
 } from 'react-native';
+import Toast from '../lib/utils/toast';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {useNavigation} from '@react-navigation/native';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -324,9 +324,9 @@ const SeasonList: React.FC<SeasonListProps> = ({
         const streams = await fetchStreams(link, streamType, providerValue);
 
         if (!streams || streams.length === 0) {
-          ToastAndroid.show(
+          Toast.show(
             'No streams available from provider',
-            ToastAndroid.SHORT,
+            Toast.SHORT,
           );
           return;
         }
@@ -337,14 +337,14 @@ const SeasonList: React.FC<SeasonListProps> = ({
         setVlcLoading(false);
         setShowServerModal(true);
 
-        ToastAndroid.show(
+        Toast.show(
           `Found ${streams.length} servers`,
-          ToastAndroid.SHORT,
+          Toast.SHORT,
         );
       } catch (error: any) {
         console.error('Error fetching streams:', error);
         const errorMessage = error?.message || 'Failed to load streams';
-        ToastAndroid.show(errorMessage, ToastAndroid.SHORT);
+        Toast.show(errorMessage, Toast.SHORT);
       } finally {
         setVlcLoading(false);
         setIsLoadingStreams(false);
@@ -404,7 +404,7 @@ const SeasonList: React.FC<SeasonListProps> = ({
         );
       } catch (error) {
         console.error('Error opening external player:', error);
-        ToastAndroid.show('Failed to open external player', ToastAndroid.SHORT);
+        Toast.show('Failed to open external player', Toast.SHORT);
       } finally {
         setVlcLoading(false);
       }

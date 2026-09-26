@@ -1,14 +1,7 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import {
-  Host,
-  Shape,
-  Text,
-  TextField,
-  useNativeState,
-} from '@expo/ui/jetpack-compose';
-import { fillMaxWidth } from '@expo/ui/jetpack-compose/modifiers';
 import React, { useEffect, useState } from 'react';
-import { Switch, ToastAndroid, TouchableOpacity, View } from 'react-native';
+import { Switch, TextInput, TouchableOpacity, View } from 'react-native';
+import Toast from '../../../lib/utils/toast';
 import { settingsStorage } from '../../../lib/storage';
 import {
   DOH_PROVIDERS,
@@ -22,13 +15,12 @@ import {
   getByeDpiStatus,
   toggleByeDpi,
 } from '../../../lib/services/byeDpiService';
-import { useM3Colors, useM3HostTheme } from '../../../theme/M3PaletteContext';
+import { useM3Colors } from '../../../theme/M3PaletteContext';
 import AppText from '../../../components/ui/Text';
 import DropdownField from '../../../components/ui/DropdownField';
 
 const DnsPreference = () => {
   const colors = useM3Colors();
-  const hostTheme = useM3HostTheme();
 
   const [warpEnabled, setWarpEnabledState] = useState<boolean>(
     settingsStorage.isWarpEnabled(),
@@ -44,7 +36,6 @@ const DnsPreference = () => {
   const [byeDpiArgs, setByeDpiArgs] = useState(
     settingsStorage.getByeDpiCmdArgs() || DEFAULT_BYEDPI_ARGS,
   );
-  const byeDpiArgsValue = useNativeState(byeDpiArgs);
   const [showArgsEditor, setShowArgsEditor] = useState<boolean>(false);
 
   useEffect(() => {
@@ -65,7 +56,6 @@ const DnsPreference = () => {
     : 'off';
   const [provider, setProvider] = useState<DohProviderValue>(initialProvider);
   const [customUrl, setCustomUrl] = useState(settingsStorage.getDohCustomUrl());
-  const customUrlValue = useNativeState(customUrl);
 
   const onToggleWarp = async (value: boolean) => {
     if (isWarpBusy || isByeDpiBusy) return;
@@ -78,29 +68,23 @@ const DnsPreference = () => {
 
     try {
       if (value) {
-        ToastAndroid.show(
-          'Connecting to Cloudflare WARP...',
-          ToastAndroid.SHORT,
-        );
+        Toast.show('Connecting to Cloudflare WARP...', Toast.SHORT);
       }
       const res = await toggleWarp(value);
       if (value && res.running) {
         setWarpPort(res.port || null);
-        ToastAndroid.show(
-          `WARP connected (Port ${res.port})`,
-          ToastAndroid.SHORT,
-        );
+        Toast.show(`WARP connected (Port ${res.port})`, Toast.SHORT);
       } else if (!value) {
         setWarpPort(null);
-        ToastAndroid.show('WARP disconnected', ToastAndroid.SHORT);
+        Toast.show('WARP disconnected', Toast.SHORT);
       }
     } catch (e: any) {
       setWarpEnabledState(false);
       setWarpPort(null);
       settingsStorage.setWarpEnabled(false);
-      ToastAndroid.show(
+      Toast.show(
         `WARP error: ${e?.message || 'Failed to connect'}`,
-        ToastAndroid.LONG,
+        Toast.LONG,
       );
     } finally {
       setIsWarpBusy(false);
@@ -118,26 +102,23 @@ const DnsPreference = () => {
 
     try {
       if (value) {
-        ToastAndroid.show('Starting ByeDPI...', ToastAndroid.SHORT);
+        Toast.show('Starting ByeDPI...', Toast.SHORT);
       }
       const res = await toggleByeDpi(value, byeDpiArgs);
       if (value && res.running) {
         setByeDpiPort(res.port || null);
-        ToastAndroid.show(
-          `ByeDPI connected (Port ${res.port})`,
-          ToastAndroid.SHORT,
-        );
+        Toast.show(`ByeDPI connected (Port ${res.port})`, Toast.SHORT);
       } else if (!value) {
         setByeDpiPort(null);
-        ToastAndroid.show('ByeDPI stopped', ToastAndroid.SHORT);
+        Toast.show('ByeDPI stopped', Toast.SHORT);
       }
     } catch (e: any) {
       setByeDpiEnabledState(false);
       setByeDpiPort(null);
       settingsStorage.setByeDpiEnabled(false);
-      ToastAndroid.show(
+      Toast.show(
         `ByeDPI error: ${e?.message || 'Failed to start'}`,
-        ToastAndroid.LONG,
+        Toast.LONG,
       );
     } finally {
       setIsByeDpiBusy(false);
@@ -152,14 +133,14 @@ const DnsPreference = () => {
       setIsByeDpiBusy(true);
       try {
         await toggleByeDpi(true, trimmed);
-        ToastAndroid.show('ByeDPI restarted with new parameters', ToastAndroid.SHORT);
+        Toast.show('ByeDPI restarted with new parameters', Toast.SHORT);
       } catch (e: any) {
-        ToastAndroid.show(`ByeDPI error: ${e?.message}`, ToastAndroid.LONG);
+        Toast.show(`ByeDPI error: ${e?.message}`, Toast.LONG);
       } finally {
         setIsByeDpiBusy(false);
       }
     } else {
-      ToastAndroid.show('ByeDPI parameters saved', ToastAndroid.SHORT);
+      Toast.show('ByeDPI parameters saved', Toast.SHORT);
     }
   };
 
@@ -179,7 +160,7 @@ const DnsPreference = () => {
   const saveCustomUrl = async (value: string) => {
     settingsStorage.setDohCustomUrl(value);
     await syncDohSettings();
-    ToastAndroid.show('Custom DNS applied', ToastAndroid.SHORT);
+    Toast.show('Custom DNS applied', Toast.SHORT);
   };
 
   return (
@@ -356,49 +337,32 @@ const DnsPreference = () => {
                 })}
               </View>
 
-              <View style={{ width: '100%', minHeight: 48 }}>
-                <Host
-                  matchContents={{ vertical: true }}
-                  style={{ width: '100%', minHeight: 48 }}
-                  {...hostTheme}>
-                  <TextField
-                    value={byeDpiArgsValue}
-                    singleLine
-                    onValueChange={setByeDpiArgs}
-                    keyboardOptions={{
-                      autoCorrectEnabled: false,
-                      capitalization: 'none',
-                      imeAction: 'done',
-                    }}
-                    keyboardActions={{ onDone: saveByeDpiArgs }}
-                    modifiers={[fillMaxWidth()]}
-                    shape={Shape.RoundedCorner({
-                      cornerRadii: {
-                        topStart: 12,
-                        topEnd: 12,
-                        bottomStart: 12,
-                        bottomEnd: 12,
-                      },
-                    })}
-                    textStyle={{ fontSize: 13, color: colors.onSurface }}
-                    colors={{
-                      focusedContainerColor: colors.surfaceContainerHigh,
-                      unfocusedContainerColor: colors.surfaceContainerHigh,
-                      focusedTextColor: colors.onSurface,
-                      unfocusedTextColor: colors.onSurface,
-                      cursorColor: colors.primary,
-                      focusedIndicatorColor: 'transparent',
-                      unfocusedIndicatorColor: 'transparent',
-                      focusedPlaceholderColor: colors.onSurfaceVariant,
-                      unfocusedPlaceholderColor: colors.onSurfaceVariant,
-                    }}>
-                    <TextField.Placeholder>
-                      <Text color={colors.onSurfaceVariant}>
-                        {DEFAULT_BYEDPI_ARGS}
-                      </Text>
-                    </TextField.Placeholder>
-                  </TextField>
-                </Host>
+              {/* Direct Args Input */}
+              <View
+                style={{
+                  width: '100%',
+                  borderRadius: 12,
+                  backgroundColor: colors.surfaceContainerHigh,
+                  borderWidth: 1,
+                  borderColor: 'rgba(255, 255, 255, 0.08)',
+                  paddingHorizontal: 12,
+                  paddingVertical: 8,
+                }}>
+                <TextInput
+                  value={byeDpiArgs}
+                  onChangeText={setByeDpiArgs}
+                  onEndEditing={() => saveByeDpiArgs(byeDpiArgs)}
+                  placeholder={DEFAULT_BYEDPI_ARGS}
+                  placeholderTextColor={colors.onSurfaceVariant}
+                  autoCorrect={false}
+                  autoCapitalize="none"
+                  returnKeyType="done"
+                  style={{
+                    fontSize: 13,
+                    color: colors.onSurface,
+                    padding: 0,
+                  }}
+                />
               </View>
             </View>
           ) : null}
@@ -466,50 +430,32 @@ const DnsPreference = () => {
               style={{ color: colors.onSurfaceVariant, marginBottom: 8 }}>
               Custom DoH URL
             </AppText>
-            <View style={{ width: '100%', minHeight: 56 }}>
-              <Host
-                matchContents={{ vertical: true }}
-                style={{ width: '100%', minHeight: 56 }}
-                {...hostTheme}>
-                <TextField
-                  value={customUrlValue}
-                  singleLine
-                  onValueChange={setCustomUrl}
-                  keyboardOptions={{
-                    autoCorrectEnabled: false,
-                    capitalization: 'none',
-                    imeAction: 'done',
-                    keyboardType: 'uri',
-                  }}
-                  keyboardActions={{ onDone: saveCustomUrl }}
-                  modifiers={[fillMaxWidth()]}
-                  shape={Shape.RoundedCorner({
-                    cornerRadii: {
-                      topStart: 16,
-                      topEnd: 16,
-                      bottomStart: 16,
-                      bottomEnd: 16,
-                    },
-                  })}
-                  textStyle={{ fontSize: 14, color: colors.onSurface }}
-                  colors={{
-                    focusedContainerColor: colors.surfaceContainerHigh,
-                    unfocusedContainerColor: colors.surfaceContainerHigh,
-                    focusedTextColor: colors.onSurface,
-                    unfocusedTextColor: colors.onSurface,
-                    cursorColor: colors.primary,
-                    focusedIndicatorColor: 'transparent',
-                    unfocusedIndicatorColor: 'transparent',
-                    focusedPlaceholderColor: colors.onSurfaceVariant,
-                    unfocusedPlaceholderColor: colors.onSurfaceVariant,
-                  }}>
-                  <TextField.Placeholder>
-                    <Text color={colors.onSurfaceVariant}>
-                      https://dns.example.com/dns-query
-                    </Text>
-                  </TextField.Placeholder>
-                </TextField>
-              </Host>
+            <View
+              style={{
+                width: '100%',
+                borderRadius: 14,
+                backgroundColor: colors.surfaceContainerHigh,
+                borderWidth: 1,
+                borderColor: 'rgba(255, 255, 255, 0.08)',
+                paddingHorizontal: 14,
+                paddingVertical: 12,
+              }}>
+              <TextInput
+                value={customUrl}
+                onChangeText={setCustomUrl}
+                onEndEditing={() => saveCustomUrl(customUrl)}
+                placeholder="https://dns.example.com/dns-query"
+                placeholderTextColor={colors.onSurfaceVariant}
+                keyboardType="url"
+                autoCorrect={false}
+                autoCapitalize="none"
+                returnKeyType="done"
+                style={{
+                  fontSize: 14,
+                  color: colors.onSurface,
+                  padding: 0,
+                }}
+              />
             </View>
           </View>
         ) : null}

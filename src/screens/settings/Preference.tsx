@@ -1,4 +1,5 @@
-import {View, ScrollView, Pressable, ToastAndroid} from 'react-native';
+import {View, ScrollView, Pressable} from 'react-native';
+import Toast from '../../lib/utils/toast';
 import React, {useState} from 'react';
 import {settingsStorage} from '../../lib/storage';
 import RNReactNativeHapticFeedback from 'react-native-haptic-feedback';
@@ -122,9 +123,9 @@ const Preferences = () => {
             onValueChange={next => {
               settingsStorage.setShowTabBarLabels(next);
               setShowTabBarLables(next);
-              ToastAndroid.show(
+              Toast.show(
                 'Restart App to Apply Changes',
-                ToastAndroid.SHORT,
+                Toast.SHORT,
               );
             }}
           />

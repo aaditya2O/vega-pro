@@ -1,5 +1,6 @@
 import React, {useState} from 'react';
-import {ToastAndroid, View} from 'react-native';
+import {View} from 'react-native';
+import Toast from '../../../lib/utils/toast';
 import {
   getDownloadLocationDisplayValue,
   selectDownloadLocation,
@@ -32,7 +33,7 @@ const DownloadLocationPreference = ({
     syncFromSharedFolder().catch(e =>
       console.warn('[VegaSync] Folder change sync failed:', e),
     );
-    ToastAndroid.show('Download location updated', ToastAndroid.SHORT);
+    Toast.show('Download location updated', Toast.SHORT);
   };
 
   const pickDownloadLocation = async () => {
@@ -48,10 +49,10 @@ const DownloadLocationPreference = ({
         return;
       }
 
-      ToastAndroid.show('No folder selected', ToastAndroid.SHORT);
+      Toast.show('No folder selected', Toast.SHORT);
     } catch (error) {
       console.log('Error picking download folder:', error);
-      ToastAndroid.show('Unable to open folder picker', ToastAndroid.SHORT);
+      Toast.show('Unable to open folder picker', Toast.SHORT);
     } finally {
       setIsPickingFolder(false);
     }
@@ -84,9 +85,9 @@ const DownloadLocationPreference = ({
               onPress={() => {
                 settingsStorage.resetDownloadLocation();
                 setDownloadLocation('Select a download folder');
-                ToastAndroid.show(
+                Toast.show(
                   'Download location cleared',
-                  ToastAndroid.SHORT,
+                  Toast.SHORT,
                 );
               }}
             />

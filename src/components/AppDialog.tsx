@@ -1,15 +1,11 @@
 import {MaterialCommunityIcons} from '@expo/vector-icons';
-import {
-  AlertDialog,
-  Host,
-  RNHostView,
-  Text,
-  TextButton,
-} from '@expo/ui/jetpack-compose';
 import React from 'react';
-import {ScrollView, Text as ReactNativeText, View} from 'react-native';
+import {ScrollView, StyleSheet, Text, View, Pressable} from 'react-native';
 import Markdown from 'react-native-markdown-display';
-import {useM3Colors, useM3HostTheme} from '../theme/M3PaletteContext';
+import {useM3Colors} from '../theme/M3PaletteContext';
+import {LiquidTokens} from '../theme/liquidGlass/tokens';
+import MaterialDialogSurface from './ui/MaterialDialogSurface';
+import Button from './ui/Button';
 
 export type AppDialogVariant = 'info' | 'success' | 'warning' | 'error';
 
@@ -57,10 +53,7 @@ const AppDialog = ({
 }: AppDialogProps) => {
   const appearance = variantStyles[variant];
   const colors = useM3Colors();
-  const hostTheme = useM3HostTheme();
-  const iconColor = colors[appearance.colorRole];
-  const confirmAction = actions[actions.length - 1];
-  const dismissAction = actions.length > 1 ? actions[0] : undefined;
+  const iconColor = colors[appearance.colorRole] || LiquidTokens.colors.accentViolet;
 
   const handleAction = (action: AppDialogAction) => {
     action.onPress?.();
@@ -69,139 +62,108 @@ const AppDialog = ({
     }
   };
 
-  if (!visible) {
-    return null;
-  }
-
   return (
-    <View
-      pointerEvents="box-none"
-      style={{left: 0, position: 'absolute', top: 0, zIndex: 1000}}>
-      <Host matchContents {...hostTheme}>
-        <AlertDialog
-          colors={{
-            containerColor: colors.surfaceContainerHigh,
-            iconContentColor: iconColor,
-            titleContentColor: colors.onSurface,
-            textContentColor: colors.onSurfaceVariant,
-          }}
-          onDismissRequest={onDismiss}>
-          <AlertDialog.Title>
-            <RNHostView matchContents>
-              <View
-                style={{
-                  alignItems: 'center',
-                  flexDirection: 'row',
-                  justifyContent: 'flex-start',
-                  width: 280,
-                }}>
-                <MaterialCommunityIcons
-                  name={appearance.icon}
-                  size={28}
-                  color={iconColor}
-                />
-                <ReactNativeText
-                  style={{
-                    color: colors.onSurface,
-                    flex: 1,
-                    fontSize: 24,
-                    fontWeight: '700',
-                    marginLeft: 16,
-                    textAlign: 'left',
-                  }}>
-                  {title}
-                </ReactNativeText>
-              </View>
-            </RNHostView>
-          </AlertDialog.Title>
-          <AlertDialog.Text>
-            {messageFormat === 'markdown' ? (
-              <RNHostView matchContents>
-                <ScrollView
-                  nestedScrollEnabled
-                  style={{maxHeight: 360, width: 280}}
-                  contentContainerStyle={{paddingRight: 8}}>
-                  <Markdown
-                    style={{
-                      body: {color: colors.onSurfaceVariant, fontSize: 14},
-                      bullet_list: {marginVertical: 4},
-                      code_inline: {
-                        backgroundColor: colors.surfaceContainerHighest,
-                        color: colors.onSurface,
-                      },
-                      fence: {
-                        backgroundColor: colors.surfaceContainerHighest,
-                        borderColor: colors.outlineVariant,
-                        color: colors.onSurface,
-                      },
-                      heading1: {
-                        color: colors.onSurface,
-                        fontSize: 20,
-                        marginVertical: 8,
-                      },
-                      heading2: {
-                        color: colors.onSurface,
-                        fontSize: 18,
-                        marginVertical: 7,
-                      },
-                      heading3: {
-                        color: colors.onSurface,
-                        fontSize: 16,
-                        marginVertical: 6,
-                      },
-                      link: {color: colors.primary},
-                      ordered_list: {marginVertical: 4},
-                      paragraph: {marginBottom: 8, marginTop: 0},
-                    }}>
-                    {message}
-                  </Markdown>
-                </ScrollView>
-              </RNHostView>
-            ) : (
-              <Text style={{typography: 'bodyMedium'}}>{message}</Text>
-            )}
-          </AlertDialog.Text>
-          {dismissAction ? (
-            <AlertDialog.DismissButton>
-              <TextButton
-                enabled={!dismissAction.disabled}
-                onClick={() => handleAction(dismissAction)}
-                colors={{contentColor: colors.onSurfaceVariant}}>
-                <Text
-                  color={String(colors.onSurfaceVariant)}
-                  style={{typography: 'labelLarge', fontWeight: '700'}}>
-                  {dismissAction.label}
-                </Text>
-              </TextButton>
-            </AlertDialog.DismissButton>
-          ) : null}
-          {confirmAction ? (
-            <AlertDialog.ConfirmButton>
-              <TextButton
-                enabled={!confirmAction.disabled}
-                onClick={() => handleAction(confirmAction)}
-                colors={{
-                  contentColor:
-                    confirmAction.variant === 'destructive'
-                      ? colors.error
-                      : colors.primary,
-                }}>
-                <Text
-                  color={String(
-                    confirmAction.variant === 'destructive'
-                      ? colors.error
-                      : colors.primary,
-                  )}
-                  style={{typography: 'labelLarge', fontWeight: '700'}}>
-                  {confirmAction.label}
-                </Text>
-              </TextButton>
-            </AlertDialog.ConfirmButton>
-          ) : null}
-        </AlertDialog>
-      </Host>
-    </View>
+    <MaterialDialogSurface visible={visible} onDismiss={onDismiss}>
+      <View style={styles.headerRow}>
+        <MaterialCommunityIcons name={appearance.icon} size={28} color={iconColor} />
+        <Text style={[styles.title, {color: colors.onSurface}]}>{title}</Text>
+      </View>
+
+      <View style={styles.bodyWrap}>
+        {messageFormat === 'markdown' ? (
+          <ScrollView
+            nestedScrollEnabled
+            style={styles.markdownScroll}
+            contentContainerStyle={{paddingRight: 8}}>
+            <Markdown
+              style={{
+                body: {color: colors.onSurfaceVariant, fontSize: 14},
+                bullet_list: {marginVertical: 4},
+                code_inline: {
+                  backgroundColor: colors.surfaceContainerHighest,
+                  color: colors.onSurface,
+                },
+                fence: {
+                  backgroundColor: colors.surfaceContainerHighest,
+                  borderColor: colors.outlineVariant,
+                  color: colors.onSurface,
+                },
+                heading1: {
+                  color: colors.onSurface,
+                  fontSize: 20,
+                  marginVertical: 8,
+                },
+                heading2: {
+                  color: colors.onSurface,
+                  fontSize: 18,
+                  marginVertical: 7,
+                },
+                heading3: {
+                  color: colors.onSurface,
+                  fontSize: 16,
+                  marginVertical: 6,
+                },
+                link: {color: colors.primary},
+                ordered_list: {marginVertical: 4},
+                paragraph: {marginBottom: 8, marginTop: 0},
+              }}>
+              {message}
+            </Markdown>
+          </ScrollView>
+        ) : (
+          <Text style={[styles.message, {color: colors.onSurfaceVariant}]}>{message}</Text>
+        )}
+      </View>
+
+      <View style={styles.actionsRow}>
+        {actions.map((action, idx) => (
+          <Button
+            key={idx}
+            compact
+            variant={
+              action.variant === 'destructive'
+                ? 'destructive'
+                : action.variant === 'primary'
+                  ? 'filled'
+                  : 'tonal'
+            }
+            disabled={action.disabled}
+            onPress={() => handleAction(action)}>
+            {action.label}
+          </Button>
+        ))}
+      </View>
+    </MaterialDialogSurface>
   );
 };
+
+const styles = StyleSheet.create({
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: 14,
+  },
+  title: {
+    fontSize: 20,
+    fontWeight: '700',
+    flex: 1,
+  },
+  bodyWrap: {
+    marginBottom: 20,
+  },
+  message: {
+    fontSize: 14.5,
+    lineHeight: 21,
+  },
+  markdownScroll: {
+    maxHeight: 280,
+  },
+  actionsRow: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    gap: 10,
+  },
+});
 
 export default AppDialog;

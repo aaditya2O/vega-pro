@@ -1,11 +1,15 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { Host, Slider } from '@expo/ui/jetpack-compose';
-import { fillMaxWidth } from '@expo/ui/jetpack-compose/modifiers';
-import React, { useCallback, useRef } from 'react';
-import { View } from 'react-native';
+import React, {useCallback, useRef, useState} from 'react';
+import {
+  PanResponder,
+  StyleSheet,
+  View,
+  Text,
+} from 'react-native';
 import ReactNativeHapticFeedback from 'react-native-haptic-feedback';
-import { settingsStorage } from '../../lib/storage';
-import { useM3Colors, useM3HostTheme } from '../../theme/M3PaletteContext';
+import {settingsStorage} from '../../lib/storage';
+import {useM3Colors} from '../../theme/M3PaletteContext';
+import {LiquidTokens} from '../../theme/liquidGlass/tokens';
 import AppText from './Text';
 
 interface SettingsSliderRowProps {
@@ -29,124 +33,195 @@ const SettingsSliderRow = ({
   value,
   min,
   max,
-  step,
+  step = 1,
   valueDisplay,
   onValueChange,
   onValueChangeFinished,
   divider = true,
 }: SettingsSliderRowProps) => {
   const colors = useM3Colors();
-  const hostTheme = useM3HostTheme();
+  const [trackWidth, setTrackWidth] = useState(200);
   const prevValueRef = useRef(value);
 
-  // In Android Jetpack Compose Slider:
-  // steps = number of discrete intervals between min and max.
-  // steps = (max - min) / step - 1
-  let steps = 0;
-  if (step && step > 0) {
-    steps = Math.max(Math.round((max - min) / step) - 1, 0);
-  }
-
   const triggerHaptic = useCallback(() => {
-    if (settingsStorage.isHapticFeedbackEnabled()) {
-      ReactNativeHapticFeedback.trigger('effectTick', {
-        enableVibrateFallback: true,
-        ignoreAndroidSystemSettings: false,
-      });
-    }
+    try {
+      if (settingsStorage.isHapticFeedbackEnabled()) {
+        ReactNativeHapticFeedback.trigger('effectTick', {
+          enableVibrateFallback: true,
+          ignoreAndroidSystemSettings: false,
+        });
+      }
+    } catch {}
   }, []);
 
-  const handleValueChange = useCallback(
-    (v: number) => {
-      let next = v;
-      if (step && step > 0) {
-        next = Math.round((v - min) / step) * step + min;
+  const calculateValueFromPosition = useCallback(
+    (x: number) => {
+      const ratio = Math.max(0, Math.min(1, x / trackWidth));
+      let rawVal = min + ratio * (max - min);
+      if (step > 0) {
+        rawVal = Math.round((rawVal - min) / step) * step + min;
       }
-      if (next !== prevValueRef.current) {
-        prevValueRef.current = next;
-        triggerHaptic();
-      }
-      onValueChange(next);
+      return Math.max(min, Math.min(max, rawVal));
     },
-    [min, step, onValueChange, triggerHaptic],
+    [min, max, step, trackWidth],
   );
 
-  const handleValueChangeFinished = useCallback(() => {
-    triggerHaptic();
-    onValueChangeFinished?.(prevValueRef.current);
-  }, [triggerHaptic, onValueChangeFinished]);
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onPanResponderMove: (_, gestureState) => {
+        const next = calculateValueFromPosition(gestureState.x0 + gestureState.dx);
+        if (next !== prevValueRef.current) {
+          prevValueRef.current = next;
+          triggerHaptic();
+          onValueChange(next);
+        }
+      },
+      onPanResponderRelease: () => {
+        triggerHaptic();
+        onValueChangeFinished?.(prevValueRef.current);
+      },
+    }),
+  ).current;
 
   const display = valueDisplay !== undefined ? valueDisplay : value;
+  const fillRatio = Math.max(0, Math.min(1, (value - min) / (max - min)));
 
   return (
     <View
-      className="px-4 py-3"
-      style={{
-        borderBottomColor: colors.outlineVariant,
-        borderBottomWidth: divider ? 1 : 0,
-      }}>
-      <View className="flex-row items-center justify-between">
-        <View className="flex-row items-center flex-1 mr-2">
-          {icon ? (
+      style={[
+        styles.rowContainer,
+        {borderBottomColor: colors.outlineVariant, borderBottomWidth: divider ? 1 : 0},
+      ]}>
+      <View style={styles.topInfoRow}>
+        <View style={styles.iconAndTitle}>
+          {icon && (
             <View
-              className="mr-4 h-10 w-10 items-center justify-center rounded-full"
-              style={{ backgroundColor: colors.secondaryContainer }}>
+              style={[
+                styles.iconWrap,
+                {backgroundColor: LiquidTokens.colors.glassFillRegular},
+              ]}>
               <MaterialCommunityIcons
                 name={icon}
                 size={21}
-                color={colors.onSecondaryContainer}
-                pointerEvents="none"
+                color={LiquidTokens.colors.accentViolet}
               />
             </View>
-          ) : null}
-          <View className="flex-1">
-            <AppText role="bodyLarge" className="text-m3-on-surface">
+          )}
+          <View style={styles.textWrap}>
+            <AppText role="bodyLarge" style={{color: '#ffffff', fontWeight: '600'}}>
               {title}
             </AppText>
-            {description ? (
-              <AppText
-                role="bodySmall"
-                className="mt-0.5 text-m3-on-surface-variant">
+            {description && (
+              <AppText role="bodySmall" style={{color: LiquidTokens.colors.textTertiary}}>
                 {description}
               </AppText>
-            ) : null}
+            )}
           </View>
         </View>
-        <View
-          className="rounded-full px-2.5 py-1"
-          style={{ backgroundColor: colors.surfaceContainerHighest }}>
-          <AppText
-            role="titleSmall"
-            style={{ color: colors.primary, fontWeight: '700' }}>
-            {display}
-          </AppText>
+
+        <View style={styles.valueBadge}>
+          <Text style={styles.badgeText}>{display}</Text>
         </View>
       </View>
-      <View className="mt-2 w-full">
-        <Host
-          matchContents={{ vertical: true }}
-          style={{ width: '100%' }}
-          {...hostTheme}>
-          <Slider
-            value={value}
-            min={min}
-            max={max}
-            steps={steps}
-            colors={{
-              thumbColor: colors.primary,
-              activeTrackColor: colors.primary,
-              inactiveTrackColor: colors.surfaceContainerHighest,
-              activeTickColor: colors.onPrimary,
-              inactiveTickColor: colors.outlineVariant,
-            }}
-            onValueChange={handleValueChange}
-            onValueChangeFinished={handleValueChangeFinished}
-            modifiers={[fillMaxWidth()]}
+
+      {/* Custom Liquid Glass Slider Track */}
+      <View
+        style={styles.trackContainer}
+        onLayout={e => setTrackWidth(e.nativeEvent.layout.width)}
+        {...panResponder.panHandlers}>
+        <View style={styles.trackBackground}>
+          <View
+            style={[
+              styles.trackFill,
+              {
+                width: `${fillRatio * 100}%`,
+                backgroundColor: LiquidTokens.colors.accentViolet,
+              },
+            ]}
           />
-        </Host>
+        </View>
+        <View
+          style={[
+            styles.sliderThumb,
+            {left: `${fillRatio * 100}%`},
+          ]}
+        />
       </View>
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  rowContainer: {
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+  },
+  topInfoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
+  iconAndTitle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+    marginRight: 10,
+  },
+  iconWrap: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+    borderWidth: 1,
+    borderColor: LiquidTokens.colors.glassBorderSubtle,
+  },
+  textWrap: {
+    flex: 1,
+  },
+  valueBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: LiquidTokens.radii.pill,
+    backgroundColor: 'rgba(139, 92, 246, 0.2)',
+    borderWidth: 1,
+    borderColor: 'rgba(168, 140, 255, 0.4)',
+  },
+  badgeText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: LiquidTokens.colors.textAccent,
+  },
+  trackContainer: {
+    height: 28,
+    justifyContent: 'center',
+    position: 'relative',
+  },
+  trackBackground: {
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    overflow: 'hidden',
+  },
+  trackFill: {
+    height: '100%',
+    borderRadius: 3,
+  },
+  sliderThumb: {
+    position: 'absolute',
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: '#ffffff',
+    marginLeft: -9,
+    shadowColor: LiquidTokens.colors.accentViolet,
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.8,
+    shadowRadius: 6,
+  },
+});
 
 export default SettingsSliderRow;

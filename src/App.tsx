@@ -63,6 +63,10 @@ import {
 } from './lib/sync/syncService';
 import StreamingTabBar from './components/navigation/StreamingTabBar';
 import AppDialogHost from './components/AppDialogHost';
+import {mainStorage} from './lib/storage';
+import Splash from './screens/Splash';
+import Onboarding from './screens/Onboarding';
+import LiquidGlassHost from './theme/liquidGlass/components/LiquidGlassHost';
 import {
   getAnalytics,
   getCrashlytics,
@@ -176,6 +180,10 @@ export const openDownloadsScreen = (): void => {
 };
 
 const App = () => {
+  const [showSplash, setShowSplash] = React.useState(true);
+  const [showOnboarding, setShowOnboarding] = React.useState(
+    () => !mainStorage.getBool('vega_onboarding_completed', false),
+  );
   const {width: windowWidth, height: windowHeight} = useWindowDimensions();
   const isLargeScreen = Math.min(windowWidth, windowHeight) >= 600;
   LogBox.ignoreLogs([
@@ -592,52 +600,62 @@ const App = () => {
         <GlobalErrorBoundary>
           <QueryClientProvider client={queryClient}>
             <View className="flex-1 bg-black">
-              <NavigationContainer
-                ref={navigationRef}
-                onReady={async () => {
-                  if (pendingDownloadsNavigation) {
-                    openDownloadsScreen();
-                  }
-                  // Hide bootsplash
-                  await BootSplash.hide({fade: true});
-                  // Track initial screen
-                  if (hasFirebase) {
-                    try {
-                      const route = navigationRef.getCurrentRoute();
-                      if (route?.name) {
-                        const analytics = getAnalytics();
-                        analytics &&
-                          (await analytics().logScreenView({
-                            screen_name: route.name,
-                            screen_class: 'Navigation',
-                          }));
-                      }
-                    } catch {}
-                  }
-                }}
-                onStateChange={async () => {
-                  if (hasFirebase) {
-                    try {
-                      const route = navigationRef.getCurrentRoute();
-                      if (route?.name) {
-                        const analytics = getAnalytics();
-                        analytics &&
-                          (await analytics().logScreenView({
-                            screen_name: route.name,
-                            screen_class: 'Navigation',
-                          }));
-                      }
-                    } catch {}
-                  }
-                }}
-                theme={{
-                  fonts: {
-                    regular: {
-                      fontFamily: 'Inter_400Regular',
-                      fontWeight: '400',
-                    },
-                    medium: {
-                      fontFamily: 'Inter_500Medium',
+              {showSplash ? (
+                <Splash onFinish={() => setShowSplash(false)} />
+              ) : showOnboarding ? (
+                <Onboarding
+                  onComplete={() => {
+                    mainStorage.setBool('vega_onboarding_completed', true);
+                    setShowOnboarding(false);
+                  }}
+                />
+              ) : (
+                <NavigationContainer
+                  ref={navigationRef}
+                  onReady={async () => {
+                    if (pendingDownloadsNavigation) {
+                      openDownloadsScreen();
+                    }
+                    // Hide bootsplash
+                    await BootSplash.hide({fade: true});
+                    // Track initial screen
+                    if (hasFirebase) {
+                      try {
+                        const route = navigationRef.getCurrentRoute();
+                        if (route?.name) {
+                          const analytics = getAnalytics();
+                          analytics &&
+                            (await analytics().logScreenView({
+                              screen_name: route.name,
+                              screen_class: 'Navigation',
+                            }));
+                        }
+                      } catch {}
+                    }
+                  }}
+                  onStateChange={async () => {
+                    if (hasFirebase) {
+                      try {
+                        const route = navigationRef.getCurrentRoute();
+                        if (route?.name) {
+                          const analytics = getAnalytics();
+                          analytics &&
+                            (await analytics().logScreenView({
+                              screen_name: route.name,
+                              screen_class: 'Navigation',
+                            }));
+                        }
+                      } catch {}
+                    }
+                  }}
+                  theme={{
+                    fonts: {
+                      regular: {
+                        fontFamily: 'Inter_400Regular',
+                        fontWeight: '400',
+                      },
+                      medium: {
+                        fontFamily: 'Inter_500Medium',
                       fontWeight: '500',
                     },
                     bold: {
@@ -680,12 +698,12 @@ const App = () => {
                   />
                 </Stack.Navigator>
               </NavigationContainer>
-              {/* Global WAF / captcha solving dialog, triggered by providers via
-                providerContext.openWebView */}
+              )}
+              {/* iOS 26 Liquid Glass Overlays: Dynamic Island Live Activities, Face ID & AirPlay Remote */}
+              <LiquidGlassHost />
+              {/* Global WAF / captcha solving dialog */}
               <WafWebViewDialog />
-              {/* Isolated realm that runs untrusted provider code. Must stay
-                mounted for the app lifetime: every provider call is dispatched
-                into it. */}
+              {/* Isolated realm that runs untrusted provider code */}
               <ProviderSandboxHost />
             </View>
           </QueryClientProvider>

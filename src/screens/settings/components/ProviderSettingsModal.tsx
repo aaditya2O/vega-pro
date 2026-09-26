@@ -10,9 +10,9 @@ import {
   Pressable,
   ScrollView,
   TextInput,
-  ToastAndroid,
   View,
 } from 'react-native';
+import Toast from '../../../lib/utils/toast';
 import { providerManager } from '../../../lib/services/ProviderManager';
 import { providerKvStorage } from '../../../lib/storage/StorageService';
 import { getScopedKvKey } from '../../../lib/sandbox/providerRpc';
@@ -139,9 +139,7 @@ export const ProviderSettingsModal: React.FC<ProviderSettingsModalProps> = ({
               }
             }
             setValues(defaultValues);
-            if (Platform.OS === 'android') {
-              ToastAndroid.show('Provider reset to default', ToastAndroid.SHORT);
-            }
+            Toast.show('Provider reset to default', Toast.SHORT);
           },
         },
       ],

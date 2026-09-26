@@ -13,6 +13,7 @@ import {settingsStorage} from '../../lib/storage';
 import {useM3Colors} from '../../theme/M3PaletteContext';
 import AppText from '../ui/Text';
 import {AnimatedTabIcon, type AnimatedTabIconName} from './AnimatedTabIcon';
+import {LiquidTabBar} from '../../theme/liquidGlass/components/LiquidTabBar';
 
 const TAB_ICONS: Record<string, AnimatedTabIconName> = {
   HomeStack: 'home',
@@ -22,17 +23,18 @@ const TAB_ICONS: Record<string, AnimatedTabIconName> = {
   SettingsStack: 'settings',
 };
 
-const StreamingTabBar = ({
-  state,
-  descriptors,
-  navigation,
-}: BottomTabBarProps) => {
+const StreamingTabBar = (props: BottomTabBarProps) => {
+  const {state, descriptors, navigation} = props;
   const colors = useM3Colors();
   const insets = useSafeAreaInsets();
   const {width: windowWidth, height: windowHeight} = useWindowDimensions();
   const isNavigationRail = Math.min(windowWidth, windowHeight) >= 600;
   const showLabels = settingsStorage.showTabBarLabels();
   const bottomBarPadding = Math.max(insets.bottom, 8);
+
+  if (!isNavigationRail) {
+    return <LiquidTabBar {...props} />;
+  }
 
   return (
     <View

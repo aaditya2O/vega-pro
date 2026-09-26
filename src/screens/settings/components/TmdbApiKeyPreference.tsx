@@ -1,7 +1,7 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import {useFocusEffect} from '@react-navigation/native';
-import React, {useCallback, useState} from 'react';
-import {Pressable, TextInput, ToastAndroid, View} from 'react-native';
+import {Pressable, TextInput, View} from 'react-native';
+import Toast from '../../../lib/utils/toast';
 import AppText from '../../../components/ui/Text';
 import SettingsSection from '../../../components/ui/SettingsSection';
 import {settingsStorage} from '../../../lib/storage';
@@ -35,14 +35,14 @@ const TmdbApiKeyPreference = () => {
     settingsStorage.setTmdbApiKey(keyToSave);
     setInputKey(keyToSave);
     setSavedKey(keyToSave);
-    ToastAndroid.show('Custom TMDB API key saved', ToastAndroid.SHORT);
+    Toast.show('Custom TMDB API key saved', Toast.SHORT);
   };
 
   const clearKey = () => {
     settingsStorage.setTmdbApiKey('');
     setInputKey('');
     setSavedKey('');
-    ToastAndroid.show('Using bundled default key', ToastAndroid.SHORT);
+    Toast.show('Using bundled default key', Toast.SHORT);
   };
 
   const handleBlur = () => {

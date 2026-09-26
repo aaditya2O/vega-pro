@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { View, TouchableOpacity, ToastAndroid } from 'react-native';
+import { View, TouchableOpacity } from 'react-native';
+import Toast from '../lib/utils/toast';
 import { ifExists } from '../lib/file/ifExists';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import Octicons from '@expo/vector-icons/Octicons';
@@ -528,9 +529,9 @@ const DownloadComponent = ({
         });
       } catch (fallbackError) {
         console.log('Fallback intent error:', fallbackError);
-        ToastAndroid.show(
+        Toast.show(
           'No app found to handle this download',
-          ToastAndroid.SHORT,
+          Toast.SHORT,
         );
       }
     }

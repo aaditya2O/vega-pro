@@ -1,4 +1,5 @@
-import { NativeModules, Platform, ToastAndroid } from 'react-native';
+import { NativeModules, Platform } from 'react-native';
+import Toast from '../utils/toast';
 import { settingsStorage } from '../storage';
 
 const { WarpModule, ByeDpiModule } = NativeModules;
@@ -56,9 +57,9 @@ export const syncWarpSettings = async (): Promise<void> => {
       await startWarp();
     } catch (e) {
       console.warn('[WARP] Startup initialization warning:', e);
-      ToastAndroid.show(
+      Toast.show(
         'Failed to start WARP.',
-        ToastAndroid.SHORT,
+        Toast.SHORT,
       );
     }
   } else {

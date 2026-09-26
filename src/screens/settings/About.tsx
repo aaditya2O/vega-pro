@@ -1,4 +1,5 @@
-import {View, ToastAndroid, Linking} from 'react-native';
+import {View, Linking} from 'react-native';
+import Toast from '../../lib/utils/toast';
 // import pkg from '../../../package.json';
 import React, {useState} from 'react';
 import {settingsStorage} from '../../lib/storage';
@@ -61,9 +62,9 @@ const downloadUpdate = async (url: string, name: string) => {
         `[update] Download failed: status=${res.statusCode}, bytes=${res.bytesWritten}/${expectedSize}`,
       );
       await deletePartialFile(filePath);
-      ToastAndroid.show(
+      Toast.show(
         'Download failed, please try again',
-        ToastAndroid.SHORT,
+        Toast.SHORT,
       );
       return;
     }
@@ -78,7 +79,7 @@ const downloadUpdate = async (url: string, name: string) => {
     console.log('[update] Download error:', error);
     await notificationService.cancelNotification('updateProgress');
     await deletePartialFile(filePath);
-    ToastAndroid.show('Download failed, please try again', ToastAndroid.SHORT);
+    Toast.show('Download failed, please try again', Toast.SHORT);
   }
 };
 
@@ -94,9 +95,9 @@ export const checkForUpdate = async (
       'https://api.github.com/repos/Zenda-Cross/vega-app/releases/latest',
     );
     if (res.status === 403 || res.status === 429) {
-      ToastAndroid.show(
+      Toast.show(
         'GitHub API rate limit exceeded. Please wait a few minutes before trying again.',
-        ToastAndroid.LONG,
+        Toast.LONG,
       );
       setUpdateLoading(false);
       return;
@@ -113,7 +114,7 @@ export const checkForUpdate = async (
       data.tag_name.replace('v', '')?.split('.').join(''),
     );
     if (compareVersions(localVersion || '', data.tag_name.replace('v', ''))) {
-      ToastAndroid.show('New update available', ToastAndroid.SHORT);
+      Toast.show('New update available', Toast.SHORT);
       showAppDialog({
         title: `Update v${localVersion} -> ${data.tag_name}`,
         message: data.body,
@@ -147,7 +148,7 @@ export const checkForUpdate = async (
         remoteVersion,
       );
     } else {
-      showToast && ToastAndroid.show('App is up to date', ToastAndroid.SHORT);
+      showToast && Toast.show('App is up to date', Toast.SHORT);
       console.log(
         'local version',
         localVersion,
@@ -162,7 +163,7 @@ export const checkForUpdate = async (
     const msg = isRateLimit
       ? 'GitHub API rate limit exceeded. Please wait a few minutes before trying again.'
       : 'Failed to check for update';
-    ToastAndroid.show(msg, ToastAndroid.SHORT);
+    Toast.show(msg, Toast.SHORT);
     console.log('Update error', error);
   }
   setUpdateLoading(false);

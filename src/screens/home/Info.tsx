@@ -5,7 +5,9 @@ import {
 } from '@react-navigation/native-stack';
 import {StatusBar} from 'expo-status-bar';
 import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
-import {FlatList, Image, Linking, RefreshControl, ToastAndroid, View} from 'react-native';
+import {FlatList, Image, Linking, RefreshControl, View} from 'react-native';
+import Toast from '../../lib/utils/toast';
+import PosterMelt from '../../theme/liquidGlass/components/PosterMelt';
 import ReactNativeHapticFeedback from 'react-native-haptic-feedback';
 import {HomeStackParamList, TabStackParamList} from '../../App';
 import {isSafeExternalUrl} from '../../lib/sandbox/urlGuard';
@@ -243,11 +245,11 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
     }
     if (settingsStorage.isSkipInAppWebview()) {
       if (!isSafeExternalUrl(webUrl)) {
-        ToastAndroid.show('Unsupported link', ToastAndroid.SHORT);
+        Toast.show('Unsupported link', Toast.SHORT);
         return;
       }
       Linking.openURL(webUrl).catch(() => {
-        ToastAndroid.show('Failed to open browser', ToastAndroid.SHORT);
+        Toast.show('Failed to open browser', Toast.SHORT);
       });
     } else {
       navigation.navigate('Webview', {link: webUrl});
@@ -309,16 +311,15 @@ export default function Info({route, navigation}: Props): React.JSX.Element {
           <View
             pointerEvents="none"
             style={{
-              height: 340,
+              height: 380,
               left: 0,
               position: 'absolute',
               right: 0,
               top: 0,
             }}>
-            <Image
-              source={{uri: backgroundImage}}
-              resizeMode="cover"
-              style={{height: 340, width: '100%'}}
+            <PosterMelt
+              imageUri={backgroundImage}
+              height={380}
             />
           </View>
           <StatusBarScrim visible={statusBarScrimVisible} />

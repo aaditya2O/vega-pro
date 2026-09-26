@@ -1,10 +1,10 @@
 import {
   DevSettings,
-  ToastAndroid,
   View,
   TouchableOpacity,
   ScrollView,
 } from 'react-native';
+import Toast from '../../lib/utils/toast';
 import React, {useCallback, useMemo} from 'react';
 import {
   settingsStorage,
@@ -141,7 +141,7 @@ const Settings = ({navigation}: Props) => {
       });
     }
     await clearAppCache();
-    ToastAndroid.show('App cache cleared', ToastAndroid.SHORT);
+    Toast.show('App cache cleared', Toast.SHORT);
   }, []);
 
   const eraseAllLocalData = useCallback(async () => {

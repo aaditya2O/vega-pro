@@ -2,11 +2,11 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import {
   Text,
   TouchableOpacity,
-  ToastAndroid,
   View,
   Modal,
   StyleSheet,
 } from 'react-native';
+import Toast from '../lib/utils/toast';
 import React, { useEffect, useRef } from 'react';
 import { Stream } from '../lib/providers/types';
 import BottomSheet, {
@@ -114,7 +114,7 @@ const DownloadBottomSheet = ({
       });
     }
     Clipboard.setString(link);
-    ToastAndroid.show('Link copied', ToastAndroid.SHORT);
+    Toast.show('Link copied', Toast.SHORT);
   };
 
   useEffect(() => {

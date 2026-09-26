@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import { ToastAndroid } from 'react-native';
+import Toast from '../utils/toast';
 import { providerManager } from '../services/ProviderManager';
 import { settingsStorage } from '../storage';
 import { ifExists } from '../file/ifExists';
@@ -582,7 +582,7 @@ export const useStream = ({
     if (error) {
       console.error('Stream fetch error:', error);
       const errorMessage = error?.message || 'No stream found, try again later';
-      ToastAndroid.show(errorMessage, ToastAndroid.SHORT);
+      Toast.show(errorMessage, Toast.SHORT);
     }
   }, [error]);
 
@@ -591,9 +591,9 @@ export const useStream = ({
       const currentIndex = streamData.indexOf(selectedStream);
       if (currentIndex < streamData.length - 1) {
         setSelectedStream(streamData[currentIndex + 1]);
-        ToastAndroid.show(
+        Toast.show(
           'Video could not be played, Trying next server',
-          ToastAndroid.SHORT,
+          Toast.SHORT,
         );
         return true;
       }

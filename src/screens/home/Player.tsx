@@ -7,7 +7,6 @@ import {
   Image,
   ScrollView,
   Text,
-  ToastAndroid,
   TouchableOpacity,
   View,
   Platform,
@@ -23,6 +22,7 @@ import Animated, {
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../App';
 import { cacheStorage, settingsStorage } from '../../lib/storage';
+import Toast from '../../lib/utils/toast';
 import Orientation, {
   OrientationLocker,
   LANDSCAPE,
@@ -1050,7 +1050,7 @@ const Player = ({ route }: Props): React.JSX.Element => {
           if (isMounted) {
             setIsResolvingStream(false);
             if (!switchToNextStream()) {
-              ToastAndroid.show('Failed to load torrent', ToastAndroid.SHORT);
+              Toast.show('Failed to load torrent', Toast.SHORT);
             }
           }
         }
@@ -1142,7 +1142,7 @@ const Player = ({ route }: Props): React.JSX.Element => {
   // Memoized next episode handler
   const handleNextEpisode = useCallback(() => {
     if (!route.params?.episodeList?.length || !activeEpisode) {
-      ToastAndroid.show('No more episodes', ToastAndroid.SHORT);
+      Toast.show('No more episodes', Toast.SHORT);
       return;
     }
     const currentIndex = route.params.episodeList.findIndex(
@@ -1162,7 +1162,7 @@ const Player = ({ route }: Props): React.JSX.Element => {
       hasSetInitialAudioRef.current = false;
       hasSetInitialTextRef.current = false;
     } else {
-      ToastAndroid.show('No more episodes', ToastAndroid.SHORT);
+      Toast.show('No more episodes', Toast.SHORT);
     }
   }, [activeEpisode, route.params?.episodeList]);
 
@@ -1195,9 +1195,9 @@ const Player = ({ route }: Props): React.JSX.Element => {
           clearLocalVideoAssociation(activeEpisodeKey);
         }
         appliedPersistedLocalVideoRef.current = true;
-        ToastAndroid.show(
+        Toast.show(
           'Local video not found. Trying online sources...',
-          ToastAndroid.SHORT,
+          Toast.SHORT,
         );
         const sd = streamDataRef.current;
         setSelectedStream(
@@ -1210,9 +1210,9 @@ const Player = ({ route }: Props): React.JSX.Element => {
       }
 
       if (!switchToNextStream()) {
-        ToastAndroid.show(
+        Toast.show(
           'Video could not be played, try again later',
-          ToastAndroid.SHORT,
+          Toast.SHORT,
         );
         navigation.goBack();
       }
@@ -1269,16 +1269,16 @@ const Player = ({ route }: Props): React.JSX.Element => {
 
         const persisted = await takePersistableUriPermission(asset.uri);
 
-        ToastAndroid.show(
+        Toast.show(
           persisted
             ? `Playing local file: ${asset.name || 'video'}`
             : `Playing local file: ${asset.name || 'video'} (may need to be re-selected after closing the app)`,
-          ToastAndroid.LONG,
+          Toast.LONG,
         );
       }
     } catch (err) {
       console.log(err);
-      ToastAndroid.show('Could not open the selected file', ToastAndroid.SHORT);
+      Toast.show('Could not open the selected file', Toast.SHORT);
     }
   }, [
     activeEpisodeKey,

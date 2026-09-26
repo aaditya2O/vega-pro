@@ -1,6 +1,5 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { Host, LoadingIndicator } from '@expo/ui/jetpack-compose';
-import { size as indicatorSize } from '@expo/ui/jetpack-compose/modifiers';
+import LoadingIndicator from '../../../components/ui/LoadingIndicator';
 import { StatusBar } from 'expo-status-bar';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
@@ -1630,12 +1629,7 @@ const InfoStoryModal = ({
               padding: 28,
             }}>
             {isFetching ? (
-              <Host matchContents {...hostTheme}>
-                <LoadingIndicator
-                  color={colors.primary}
-                  modifiers={[indicatorSize(56, 56)]}
-                />
-              </Host>
+              <LoadingIndicator size={56} color={colors.primary} />
             ) : (
               <>
                 <MaterialCommunityIcons

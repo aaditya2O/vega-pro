@@ -109,14 +109,14 @@ module.exports = () => {
   ];
   return {
     expo: {
-      name: 'Vega',
-      scheme: APP_SCHEME,
-      displayName: 'Vega',
+      name: 'Vega Pro',
+      scheme: 'vegapro',
+      displayName: 'Vega Pro',
       jsEngine: 'hermes',
       newArchEnabled: true,
       autolinking: { exclude: ['expo-splash-screen'] },
       plugins,
-      slug: 'vega',
+      slug: 'vega-pro',
       version: '4.0.6',
       userInterfaceStyle: 'dark',
       experiments: {
@@ -166,6 +166,27 @@ module.exports = () => {
         ...(!IS_PLAYSTORE && hasIosGooglePlist
           ? { googleServicesFile: iosGoogleServicesFile }
           : {}),
+        bundleIdentifier: 'com.vega.pro',
+        supportsTablet: true,
+        infoPlist: {
+          UIBackgroundModes: ['audio', 'fetch', 'processing'],
+          AVInitialRouteSharingPolicy: 'LongFormVideo',
+          NSFaceIDUsageDescription:
+            'Vega Pro uses Face ID to lock your streaming profile and library.',
+          NSSupportsLiveActivities: true,
+          NSSupportsLiveActivitiesFrequentUpdates: true,
+          CADisableMinimumFrameDurationOnPhone: true,
+          NSAppTransportSecurity: {
+            NSAllowsArbitraryLoads: true,
+          },
+          NSBonjourServices: [
+            '_googlecast._tcp',
+            '_airplay._tcp',
+            '_raop._tcp',
+          ],
+          NSLocalNetworkUsageDescription:
+            'Vega Pro uses local network to discover AirPlay and Google Cast displays.',
+        },
       },
       platforms: ['ios', 'android'],
       extra: {
